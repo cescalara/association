@@ -30,11 +30,9 @@ transformed parameters {
   /* likelihood */
   for (i in 1:N_obs) {
     lp[i] = log_w;
-    lpp[i] = 0;
     for (k in 1:2) {
       lp[i, k] += normal_lpdf(y[i] | mu[k], sigma);
     }
-    lpp[i] += log_sum_exp(lp[i]);
   }
 
 }
@@ -54,7 +52,10 @@ model {
 generated quantities {
 
   int<lower=1, upper=2> lambda[N_obs];
+  real log_prob[N_obs];
+  
   for (i in 1:N_obs) {
+    
     lambda[i] = categorical_logit_rng(lp[i]);
   }
 }
