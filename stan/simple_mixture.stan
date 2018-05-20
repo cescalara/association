@@ -19,9 +19,11 @@ parameters {
 
 model {
 
-  sigma ~ lognormal(4, 5);
-  mu ~ normal(20, 10);
-  
+  /* priors */
+  // sigma ~ lognormal(4, 5);
+  //  mu ~ normal(20, 10);
+
+  /* likelihood */
   for (i in 1:N_obs) {
     target += log_mix(w[1], normal_lpdf(y[i] | mu[1], sigma), normal_lpdf(y[i] | mu[2], sigma) );
   }
