@@ -8,14 +8,14 @@
 data {
 
   int<lower=1> N_obs;
-  real y[N_obs];
+  array[N_obs] real y;
   
 }
 
 parameters {
 
   simplex[2] w;
-  ordered[2] mu;
+  positive_ordered[2] mu;
   real<lower=0> sigma;
 
 }
@@ -52,10 +52,11 @@ model {
 generated quantities {
 
   int<lower=1, upper=2> lambda[N_obs];
-  real log_prob[N_obs];
+  array[N_obs] real log_prob;
   
   for (i in 1:N_obs) {
     
     lambda[i] = categorical_logit_rng(lp[i]);
   }
+  
 }
