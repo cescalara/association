@@ -4,7 +4,7 @@
 
 data {
 
-  real mu[2];
+  array[2] real mu;
   real sigma;
 
   simplex[2] w;
@@ -14,8 +14,8 @@ data {
 
 generated quantities {
 
-  int<lower=1> lambda[N_obs];
-  real y[N_obs];
+  array[N_obs] int<lower=1> lambda;
+  array[N_obs] real y;
 
   for (i in 1:N_obs) {
     lambda[i] = categorical_rng(w);

@@ -5,15 +5,15 @@
 data {
 
   int<lower=1> N_obs;
-  real y[N_obs];
+  array[N_obs] real y;
   
 }
 
 parameters {
 
   simplex[2] w;
-  ordered[2] mu;
-  real<lower=0> sigma;
+  positive_ordered[2] mu;
+  real<lower=1e-3> sigma;
 
 }
 
