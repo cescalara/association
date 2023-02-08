@@ -141,3 +141,6 @@ Temporary Items
 
 ## cmdstan
 *.hpp
+
+# using jupytext
+*.ipynb
