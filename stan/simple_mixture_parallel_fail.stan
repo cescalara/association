@@ -16,8 +16,8 @@ vector lp_reduce(vector global, vector local, array[] real real_data, array[] in
   vector[2] log_w;
   vector[2] mu; 
   real sigma;
-  array[N] vector[2] lp;
-  array[N] real results;
+  vector[N*2] lp_out;
+  int j;
 
   y = real_data;
   log_w = global[1:2];
@@ -28,18 +28,15 @@ vector lp_reduce(vector global, vector local, array[] real real_data, array[] in
 
     for (k in 1:2) {
 
-      lp[i][k] = log_w[k];
-      lp[i][k] += normal_lpdf(y[i] | mu[k], sigma);
+      j = 2 * (i - 1) + k;
+      lp_out[j] = log_w[k];
+      lp_out[j] += normal_lpdf(y[i] | mu[k], sigma);
 
     }
 
   }
 
-  for (i in 1:N) {
-    results[i] = log_sum_exp(lp[i]);
-  }
-
-  return [sum(results)]';
+  return lp_out;
 }
 
 }
@@ -98,13 +95,28 @@ parameters {
 
 transformed parameters {
 
+  vector[N_obs*2] lp_out;
   vector[2] log_w = log(w);
   vector[5] global_pars;
   array[N_shards] vector[0] local_pars;
+  array[N_obs] vector[2] lp;
 
   global_pars[1:2] = log_w;
   global_pars[3:4] = mu;
   global_pars[5] = sigma; 
+
+  lp_out = map_rect(lp_reduce, global_pars, local_pars, real_data, int_data);
+
+  /* unpack lp_out -> lp */
+  for (i in 1:N_obs) {
+
+    for (k in 1:2) {
+
+      lp[i][k] = lp_out[2 * (i - 1) + k];
+
+    }
+    
+  }
 
 }
 
@@ -114,23 +126,17 @@ model {
   sigma ~ lognormal(4, 5);
   mu ~ normal(20, 10);
 
-  target += sum(map_rect(lp_reduce, global_pars, local_pars, real_data, int_data));
+  for (i in 1:N_obs) {
+    target += log_sum_exp(lp[i]);
+  }
 
 }
 
 generated quantities {
 
   array[N_obs] int<lower=1, upper=2> lambda;
-  array[N_obs] vector[2] lp;
   
   for (i in 1:N_obs) {
-
-    for (k in 1:2) {
-
-      lp[i][k] = log_w[k];
-      lp[i][k] += normal_lpdf(y[i] | mu[k], sigma);
-
-    }
 
     lambda[i] = categorical_logit_rng(lp[i]);
 
